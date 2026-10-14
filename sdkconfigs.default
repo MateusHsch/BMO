@@ -1,0 +1,11 @@
+# Enable SPI-connected RAM (PSRAM)
+CONFIG_ESP32S3_SPIRAM_SUPPORT=y
+
+# Set PSRAM mode to Octal (required for 8MB PSRAM on N16R8 chips)
+CONFIG_SPIRAM_MODE_OCT=y
+
+# Run PSRAM at 80MHz for maximum performance
+CONFIG_SPIRAM_SPEED_80M=y
+
+# Allow standard malloc() to automatically use PSRAM if needed
+CONFIG_SPIRAM_USE_MALLOC=y
