@@ -6,13 +6,13 @@
 
 void calibrar_display();
 
-// Instantiate the display class
+// Instancia classe do display
 static LGFX tft;
 uint16_t calData[8] = { 505, 3701, 538, 245, 3721, 3694, 3726, 324 };
 
 extern "C" void app_main(void) {
     
-    // Initialize display hardware
+    // Inicializa hardware do display
     tft.init();
     tft.setTouchCalibrate(calData);
     tft.setRotation(1); // 1 = Landscape, 0 = Portrait
@@ -21,11 +21,11 @@ extern "C" void app_main(void) {
 
     tft.fillScreen(TFT_BLACK);
     
-    // Set text styling
+    // Estilo do texto
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
     tft.setTextSize(2);
     
-    // Draw initial text
+    // Desenha texto inicial
     tft.setCursor(10, 10);
     tft.println("ESP-IDF + LovyanGFX");
     tft.setCursor(10, 40);
@@ -40,7 +40,7 @@ extern "C" void app_main(void) {
     while (1) {
         uint16_t x, y;
 
-        // 1. Lógica do contador (Executa a cada 1000ms sem parar o loop)
+        // Escreve de 1 a 10 na tela
         if (!concluido) {
             if ((xTaskGetTickCount() - ultimo_tempo) >= pdMS_TO_TICKS(1000)) {
                 tft.setCursor(offset, 70);
@@ -53,22 +53,23 @@ extern "C" void app_main(void) {
                     offset = 10;
                     concluido = 1;
                 }
-                ultimo_tempo = xTaskGetTickCount(); // Reseta o cronômetro
+                ultimo_tempo = xTaskGetTickCount();
             }
         }
         
-        // 2. Lógica do Touch (Agora é executada quase instantaneamente)
+        // Imprime as coordenadas do touch e desenha um circulo
         if (tft.getTouch(&x, &y)) {
             tft.setCursor(10, 100);
             tft.printf("Touch X: %03d | Y: %03d", x, y);
             tft.fillCircle(x, y, 3, TFT_RED);
         }
         
-        // 3. Delay ultra-curto apenas para alimentar o Watchdog do FreeRTOS
+        // Task repete a cada 10ms
         vTaskDelay(pdMS_TO_TICKS(10));
     }
 }
 
+// Função para calibração do display
 void calibrar_display() {
     tft.fillScreen(TFT_BLACK);
     tft.setCursor(10, 10);
@@ -92,6 +93,6 @@ void calibrar_display() {
             calData[0], calData[1], calData[2], calData[3], 
             calData[4], calData[5], calData[6], calData[7]);
 
-    // Pausa dramática de 10 segundos para você conseguir anotar
-    vTaskDelay(pdMS_TO_TICKS(20000)); 
+    // Pausa dramática de 20 segundos para você conseguir anotar
+    vTaskDelay(pdMS_TO_TICKS(20000));
 }
