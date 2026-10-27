@@ -9,3 +9,5 @@ CONFIG_SPIRAM_SPEED_80M=y
 
 # Allow standard malloc() to automatically use PSRAM if needed
 CONFIG_SPIRAM_USE_MALLOC=y
+
+CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG=y

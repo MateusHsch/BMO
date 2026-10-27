@@ -14,14 +14,13 @@
 ## SD Card Module <-> ESP32-S3 (SPI3 - Independent Bus)
 - GND <-> GND
 - VCC <-> 5V (VBUS)
-- MISO <-> GPIO 37
-- MOSI <-> GPIO 35
-- SCK <-> GPIO 36
-- CS <-> GPIO 38
+- MISO <-> GPIO 5
+- MOSI <-> GPIO 4
+- SCK  <-> GPIO 6
+- CS   <-> GPIO 7
 
 ## Touch (XPT2046) <-> ESP32-S3 (SPI3 - Shared with SD)
-- T_CLK <-> GPIO 36 (Shared with SD SCK)
-- T_CS <-> GPIO 14
-- T_DIN <-> GPIO 35 (Shared with SD MOSI)
-- T_DO <-> GPIO 37 (Shared with SD MISO)
-- T_IRQ <-> Not Connected
+- T_CLK <-> GPIO 12 (Shared with Display SCK)
+- T_CS  <-> GPIO 14 (Unchanged)
+- T_DIN <-> GPIO 11 (Shared with Display MOSI)
+- T_DO  <-> GPIO 13 (Dedicated MISO for Touch on SPI2)

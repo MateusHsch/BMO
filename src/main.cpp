@@ -8,6 +8,7 @@
 #include "esp_vfs_fat.h"
 #include "sdmmc_cmd.h"
 #include "driver/spi_master.h"
+#include "driver/gpio.h"
 #include "LGFX_Config.hpp"
 
 void calibrar_display();
@@ -18,46 +19,59 @@ static LGFX tft;
 uint16_t calData[8] = { 505, 3701, 538, 245, 3721, 3694, 3726, 324 };
 
 extern "C" void app_main(void) {
+    esp_log_level_set("sdspi_transaction", ESP_LOG_VERBOSE);
+    esp_log_level_set("sdspi_host", ESP_LOG_VERBOSE);
+    esp_log_level_set("sdmmc_cmd", ESP_LOG_VERBOSE);
+
+    // Pull-ups alinhados com os novos pinos físicos
+    // gpio_set_pull_mode((gpio_num_t)4, GPIO_PULLUP_ONLY); // MOSI
+    // gpio_set_pull_mode((gpio_num_t)5, GPIO_PULLUP_ONLY); // MISO
+    // gpio_set_pull_mode((gpio_num_t)6, GPIO_PULLUP_ONLY); // SCK
+    // gpio_set_pull_mode((gpio_num_t)7, GPIO_PULLUP_ONLY); // CS
     
-    /* SD Card Init
-    // 1. Initialize the SPI3 bus manually for the SD Card and Touch
-    spi_bus_config_t bus_cfg = {
-        .mosi_io_num = 35,
-        .miso_io_num = 37,
-        .sclk_io_num = 36,
-        .quadwp_io_num = -1,
-        .quadhd_io_num = -1,
-        .max_transfer_sz = 4000,
-    };
+    // 1. Declara e inicializa o barramento SPI3
+    spi_bus_config_t bus_cfg = {};
+    bus_cfg.mosi_io_num = 4;
+    bus_cfg.miso_io_num = 5;
+    bus_cfg.sclk_io_num = 6;
+
+    // Desativa EXPLICITAMENTE todos os pinos de dados extras (Evita o falso conflito)
+    bus_cfg.quadwp_io_num = -1;
+    bus_cfg.quadhd_io_num = -1;
+    bus_cfg.data4_io_num  = -1;
+    bus_cfg.data5_io_num  = -1;
+    bus_cfg.data6_io_num  = -1;
+    bus_cfg.data7_io_num  = -1;
+    
+    bus_cfg.max_transfer_sz = 4000;
     spi_bus_initialize(SPI3_HOST, &bus_cfg, SPI_DMA_CH_AUTO);
 
-    // 2. Mount the SD Card on SPI3
+    // 2. Inicializa o display primeiro
+    tft.init();
+    tft.setTouchCalibrate(calData);
+    tft.setRotation(1);
+    tft.fillScreen(TFT_BLACK);
+
+    // 3. Configura e monta o cartão SD
     sdmmc_host_t host = SDSPI_HOST_DEFAULT();
     host.slot = SPI3_HOST;
+    host.max_freq_khz = 400;
 
     sdspi_device_config_t slot_config = SDSPI_DEVICE_CONFIG_DEFAULT();
-    slot_config.gpio_cs = (gpio_num_t)38;
+    slot_config.gpio_cs = (gpio_num_t)7;
     slot_config.host_id = SPI3_HOST;
 
     esp_vfs_fat_sdmmc_mount_config_t mount_config = {
         .format_if_mount_failed = false,
         .max_files = 5,
-        .allocation_unit_size = 16 * 1024
+        .allocation_unit_size = 16 * 1024,
+        .disk_status_check_enable = false, // Correção do erro de compilação
+        .use_one_fat = false               // Correção do erro de compilação
     };
 
     sdmmc_card_t *card;
     esp_err_t ret = esp_vfs_fat_sdspi_mount("/sdcard", &host, &slot_config, &mount_config, &card);
 
-    */
-
-    // 3. Inicializa hardware do display (LGFX will attach to the existing SPI3 bus)
-    tft.init();
-    tft.setTouchCalibrate(calData);
-    tft.setRotation(1); // 1 = Landscape, 0 = Portrait
-
-    //calibrar_display();
-
-    tft.fillScreen(TFT_BLACK);
     
     // Estilo do texto
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
@@ -67,7 +81,7 @@ extern "C" void app_main(void) {
     tft.setCursor(10, 10);
     tft.println("ESP-IDF + LovyanGFX");
     
-    /* SD Mouted?
+    // SD Mouted?
     // Exibe status do SD na tela para validacao visual
     tft.setCursor(10, 40);
     if (ret == ESP_OK) {
@@ -78,8 +92,8 @@ extern "C" void app_main(void) {
         tft.printf("Falha SD: %s\n", esp_err_to_name(ret));
     }
 
-    teste_sd_card();
-    */
+    //teste_sd_card();
+    
 
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
     tft.setCursor(10, 70);

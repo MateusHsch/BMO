@@ -9,19 +9,19 @@ class LGFX : public lgfx::LGFX_Device {
 
 public:
   LGFX(void) {
-    { // 1. Configuração do Barramento SPI (SPI2 - Display Only)
+{ // 1. Configuração do Barramento SPI (SPI2 - Display & Touch)
       auto cfg = _bus_instance.config();
       cfg.spi_host    = SPI2_HOST;
       cfg.spi_mode    = 0;
-      cfg.freq_write  = 40000000; // Increased to 40MHz for IO_MUX pins
+      cfg.freq_write  = 40000000; 
       cfg.freq_read   = 16000000;
       cfg.spi_3wire   = false;
       cfg.use_lock    = true;
       cfg.dma_channel = SPI_DMA_CH_AUTO;
-      cfg.pin_sclk    = 12; // SCK <-> GPIO 12 (IO_MUX)
-      cfg.pin_mosi    = 11; // SDI/MOSI <-> GPIO 11 (IO_MUX)
-      cfg.pin_miso    = -1; // SDO/MISO Not connected (Isolates ILI9488 bug)
-      cfg.pin_dc      = 9;  // DC/RS <-> GPIO 9
+      cfg.pin_sclk    = 12; 
+      cfg.pin_mosi    = 11; 
+      cfg.pin_miso    = 13; // Re-enabled MISO for the Touch controller
+      cfg.pin_dc      = 9;  
       _bus_instance.config(cfg);
       _panel_instance.setBus(&_bus_instance);
     }
@@ -46,21 +46,21 @@ public:
       _panel_instance.config(cfg);
     }
 
-    { // 3. Configuração do Touch XPT2046 (SPI3 - Shared with SD Card)
+{ // 3. Configuração do Touch XPT2046 (Moved to SPI2)
       auto cfg = _touch_instance.config();
       cfg.x_min      = 0;
       cfg.x_max      = 319;
       cfg.y_min      = 0;
       cfg.y_max      = 479;
       cfg.pin_int    = -1;
-      cfg.bus_shared = true; // Shared with the SD Card
+      cfg.bus_shared = true; // Now shared with the Display, not the SD
       cfg.offset_rotation = 0;
-      cfg.spi_host   = SPI3_HOST; // Moved to SPI3
+      cfg.spi_host   = SPI2_HOST; // Changed to SPI2
       cfg.freq       = 2500000;
-      cfg.pin_sclk   = 36; // SCK <-> GPIO 36
-      cfg.pin_mosi   = 35; // MOSI <-> GPIO 35
-      cfg.pin_miso   = 37; // MISO <-> GPIO 37
-      cfg.pin_cs     = 14; // T_CS <-> GPIO 14
+      cfg.pin_sclk   = 12; // Matches Display SCK
+      cfg.pin_mosi   = 11; // Matches Display MOSI
+      cfg.pin_miso   = 13; // Matches SPI2 MISO
+      cfg.pin_cs     = 14; 
       _touch_instance.config(cfg);
       _panel_instance.setTouch(&_touch_instance);
     }
